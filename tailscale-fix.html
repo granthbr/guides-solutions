@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Guide: Fixing Tailscale Errors</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The SPA is designed as an interactive guide. It starts by presenting the problem, then offers two clear choices for solutions. Clicking a solution dynamically displays only the relevant step-by-step instructions in a dedicated content area. This task-oriented structure is more efficient for a user trying to solve a problem than a linear document, as it hides irrelevant information and provides clear action paths. Key interactions are the solution selection and one-click command copying. -->
+    <!-- Visualization & Content Choices: The source report is a technical guide, not data-driven, so no charts are used. The core content is organized into interactive components: Report Info (Error message) -> Goal (Diagnose) -> Presentation (Styled text block) -> Interaction (None). Report Info (Two solutions) -> Goal (Organize/Navigate) -> Presentation (Interactive selection cards/buttons) -> Interaction (Click to reveal steps). Report Info (CLI commands) -> Goal (Instruct) -> Presentation (Code blocks with copy buttons) -> Interaction (Click to copy). This approach turns a static text document into a functional tool. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        .solution-card.selected {
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+        }
+        .copy-btn-feedback {
+            background-color: #16a34a !important;
+            color: white !important;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800">
+
+    <div class="container mx-auto max-w-4xl p-4 sm:p-6 md:p-8">
+        
+        <header class="text-center mb-10">
+            <h1 class="text-3xl sm:text-4xl font-bold text-stone-900">Resolving Tailscale Firewall Errors on Linux</h1>
+            <p class="mt-2 text-lg text-stone-600">An interactive guide to fix `iptables` vs `nftables` conflicts.</p>
+        </header>
+
+        <main>
+            <!-- Section 1: The Problem -->
+            <section id="problem" class="mb-12 bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                <h2 class="text-2xl font-bold mb-4 text-stone-900">1. The Problem: Health Errors</h2>
+                <p class="mb-4 text-stone-700">
+                    On modern Linux systems, you may see a Tailscale health error related to firewall rules. This occurs because Tailscale is attempting to use older `iptables-legacy` commands, but your system defaults to the newer `nftables` framework. The error typically looks like this:
+                </p>
+                <div class="bg-stone-100 text-sm text-stone-700 p-4 rounded-md overflow-x-auto">
+                    <pre><code># Health check:
+#       - Tailscale can't reach the configured DNS servers...
+#       - adding [-i tailscale0 -j MARK --set-mark...] in v6/filter/ts-forward: ...
+ip6tables vX.X.X (nf_tables): MARK: bad value for option "--set-mark"...</code></pre>
+                </div>
+            </section>
+
+            <!-- Section 2: Choose Your Solution -->
+            <section id="chooser" class="mb-12">
+                <h2 class="text-2xl font-bold mb-4 text-center text-stone-900">2. Choose Your Solution</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div id="solution1-card" class="solution-card bg-white p-6 rounded-lg shadow-sm border-2 border-stone-200 cursor-pointer hover:border-amber-500 transition-all duration-200">
+                        <h3 class="text-xl font-bold text-stone-900">Solution 1: System-Wide Fix</h3>
+                        <p class="mt-2 mb-3 text-stone-600">Switch your system's default firewall to `iptables-legacy`. This is the most common and straightforward fix.</p>
+                        <span class="font-semibold text-amber-600">Recommended</span>
+                    </div>
+                    <div id="solution2-card" class="solution-card bg-white p-6 rounded-lg shadow-sm border-2 border-stone-200 cursor-pointer hover:border-amber-500 transition-all duration-200">
+                        <h3 class="text-xl font-bold text-stone-900">Solution 2: Tailscale-Only Fix</h3>
+                        <p class="mt-2 mb-3 text-stone-600">Configure Tailscale to generate `nftables`-compatible rules, leaving your system default unchanged.</p>
+                        <span class="font-semibold text-sky-600">Advanced</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: The Steps (Dynamically Populated) -->
+            <section id="steps-container" class="transition-opacity duration-500 opacity-0">
+                <!-- Content will be injected here by JavaScript -->
+            </section>
+        </main>
+        
+        <footer class="text-center mt-12 pt-6 border-t border-stone-200">
+            <p class="text-sm text-stone-500">Interactive guide created from Tailscale documentation.</p>
+        </footer>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const solution1Card = document.getElementById('solution1-card');
+            const solution2Card = document.getElementById('solution2-card');
+            const stepsContainer = document.getElementById('steps-container');
+
+            const solutions = {
+                'solution1': {
+                    title: 'Solution 1: Switch to `iptables-legacy`',
+                    intro: 'This process tells your entire system to use the legacy iptables commands that Tailscale expects, resolving the conflict.',
+                    steps: [
+                        {
+                            title: 'Step 1.1: Update System Alternatives',
+                            description: 'Run these commands to change the default `iptables` and `ip6tables` to their legacy versions. You will need `sudo` privileges.',
+                            command: `sudo update-alternatives --set iptables /usr/sbin/iptables-legacy
+sudo update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy`
+                        },
+                        {
+                            title: 'Step 1.2: Restart the Tailscale Daemon',
+                            description: 'For the changes to take effect, you must restart Tailscale. This allows it to re-apply its firewall rules using the correct system. Remember to add any flags you normally use with `tailscale up`.',
+                            command: `sudo tailscale down
+sudo tailscale up`
+                        },
+                        {
+                            title: 'Step 1.3: Verify the Fix',
+                            description: 'Check Tailscale\'s status. The health errors related to the firewall should now be gone.',
+                            command: 'tailscale status'
+                        }
+                    ]
+                },
+                'solution2': {
+                    title: 'Solution 2: Configure Tailscale for `nftables` Mode',
+                    intro: 'This process leaves your system firewall default as `nftables` and specifically tells Tailscale how to interact with it.',
+                    steps: [
+                        {
+                            title: 'Step 2.1: Set Tailscale\'s Netfilter Mode',
+                            description: 'Run the following command to instruct Tailscale to use `nftables`. This changes Tailscale\'s configuration directly.',
+                            command: 'sudo tailscale set --netfilter-mode=nftables'
+                        },
+                        {
+                            title: 'Step 2.2: Restart the Tailscale Daemon',
+                            description: 'Restart Tailscale to apply the new configuration and regenerate the firewall rules in the correct format.',
+                            command: `sudo tailscale down
+sudo tailscale up`
+                        },
+                        {
+                            title: 'Step 2.3: Verify the Fix',
+                            description: 'Check the status to confirm that the error has been resolved and Tailscale is healthy.',
+                            command: 'tailscale status'
+                        }
+                    ]
+                }
+            };
+
+            function displaySolution(solutionKey) {
+                const solutionData = solutions[solutionKey];
+                if (!solutionData) return;
+
+                let stepsHtml = `
+                    <h2 class="text-2xl font-bold mb-2 text-stone-900">${solutionData.title}</h2>
+                    <p class="text-stone-700 mb-8">${solutionData.intro}</p>
+                    <div class="space-y-6">
+                `;
+
+                solutionData.steps.forEach((step, index) => {
+                    stepsHtml += `
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
+                            <h3 class="text-lg font-bold text-stone-800 mb-3">${step.title}</h3>
+                            <p class="text-stone-600 mb-4">${step.description}</p>
+                            <div class="relative bg-stone-100 p-4 rounded-md">
+                                <pre class="text-sm text-stone-700 overflow-x-auto"><code>${step.command}</code></pre>
+                                <button class="copy-btn absolute top-2 right-2 bg-stone-200 hover:bg-stone-300 text-stone-700 text-xs font-medium py-1 px-2 rounded transition-colors duration-200">Copy</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                stepsHtml += `</div>`;
+                stepsContainer.innerHTML = stepsHtml;
+                stepsContainer.style.opacity = 1;
+
+                attachCopyListeners();
+            }
+
+            function attachCopyListeners() {
+                document.querySelectorAll('.copy-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const pre = e.target.previousElementSibling;
+                        const code = pre.querySelector('code');
+                        const commandText = code.innerText;
+                        
+                        const textarea = document.createElement('textarea');
+                        textarea.value = commandText;
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        try {
+                            document.execCommand('copy');
+                            e.target.textContent = 'Copied!';
+                            e.target.classList.add('copy-btn-feedback');
+                            setTimeout(() => {
+                                e.target.textContent = 'Copy';
+                                e.target.classList.remove('copy-btn-feedback');
+                            }, 2000);
+                        } catch (err) {
+                            console.error('Failed to copy text: ', err);
+                        }
+                        document.body.removeChild(textarea);
+                    });
+                });
+            }
+
+            solution1Card.addEventListener('click', () => {
+                solution1Card.classList.add('selected');
+                solution2Card.classList.remove('selected');
+                displaySolution('solution1');
+            });
+
+            solution2Card.addEventListener('click', () => {
+                solution2Card.classList.add('selected');
+                solution1Card.classList.remove('selected');
+                displaySolution('solution2');
+            });
+        });
+    </script>
+</body>
+</html>
