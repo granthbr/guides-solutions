@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kubernetes Port Forwarding for Remote Access</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            color: #333;
+            background-color: #fafafa;
+        }
+        
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 0.5rem;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-top: 2rem;
+            border-left: 4px solid #3498db;
+            padding-left: 1rem;
+        }
+        
+        h3 {
+            color: #34495e;
+            margin-top: 1.5rem;
+        }
+        
+        h4 {
+            color: #7f8c8d;
+            margin-top: 1rem;
+        }
+        
+        pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            border-left: 4px solid #3498db;
+        }
+        
+        code {
+            background: #ecf0f1;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+            color: #2c3e50;
+        }
+        
+        pre code {
+            background: transparent;
+            padding: 0;
+            color: #ecf0f1;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: white;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background: #34495e;
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .badge.recommended {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .badge.limited {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .badge.avoid {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .alert {
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+        
+        .alert.info {
+            background: #d4edda;
+            border-color: #27ae60;
+            color: #155724;
+        }
+        
+        .alert.warning {
+            background: #fff3cd;
+            border-color: #f39c12;
+            color: #856404;
+        }
+        
+        .alert.danger {
+            background: #f8d7da;
+            border-color: #e74c3c;
+            color: #721c24;
+        }
+        
+        .toc {
+            background: #ecf0f1;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 2rem;
+        }
+        
+        .toc ul {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+        
+        .toc a {
+            color: #2c3e50;
+            text-decoration: none;
+        }
+        
+        .toc a:hover {
+            color: #3498db;
+        }
+        
+        ul, ol {
+            padding-left: 1.5rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+        }
+        
+        strong {
+            color: #2c3e50;
+        }
+        
+        .footer {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #ddd;
+            color: #7f8c8d;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kubernetes Port Forwarding for Remote Access</h1>
+        
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#the-problem">The Problem</a></li>
+                <li><a href="#network-interface-selection">Network Interface Selection Strategy</a></li>
+                <li><a href="#practical-example">Practical Example: Wazuh Dashboard Access</a></li>
+                <li><a href="#troubleshooting">Troubleshooting Port Forward Issues</a></li>
+                <li><a href="#security">Security Considerations</a></li>
+                <li><a href="#commands">Common Port Forward Commands</a></li>
+                <li><a href="#summary">Summary</a></li>
+            </ul>
+        </div>
+
+        <h2 id="overview">Overview</h2>
+        <p>This document explains how to properly configure Kubernetes port forwarding for remote access, particularly when accessing services from VPN connections or external networks.</p>
+
+        <h2 id="the-problem">The Problem</h2>
+        <p>By default, <code>kubectl port-forward</code> binds to localhost (127.0.0.1), which only allows access from the local machine. When you need to access Kubernetes services remotely (via VPN, SSH tunnel, or external networks), you need to bind the port-forward to a specific network interface.</p>
+
+        <h2 id="network-interface-selection">Network Interface Selection Strategy</h2>
+
+        <h3>1. Identify Available Network Interfaces</h3>
+        <p>First, examine your system's network interfaces to understand what's available:</p>
+
+        <pre><code># Show all network interfaces with IP addresses
+ip addr show | grep "inet " | grep -v "127.0.0.1"
+
+# Alternative command for detailed interface information
+ip route show | grep src</code></pre>
+
+        <p>Common interface types you'll encounter:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Interface Type</th>
+                    <th>Example IP</th>
+                    <th>Description</th>
+                    <th>Use for Port Forward</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>WiFi Interface</strong></td>
+                    <td><code>192.168.50.216/23</code></td>
+                    <td>Physical WiFi adapter</td>
+                    <td><span class="badge recommended">✅ Recommended</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Ethernet Interface</strong></td>
+                    <td><code>192.168.1.100/24</code></td>
+                    <td>Physical ethernet adapter</td>
+                    <td><span class="badge recommended">✅ Recommended</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Tailscale/VPN</strong></td>
+                    <td><code>100.65.114.2/32</code></td>
+                    <td>VPN mesh network interface</td>
+                    <td><span class="badge limited">⚠️ Limited</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Docker Bridge</strong></td>
+                    <td><code>172.17.0.1/16</code></td>
+                    <td>Docker container network</td>
+                    <td><span class="badge avoid">❌ Avoid</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Virtual Bridge</strong></td>
+                    <td><code>192.168.122.1/24</code></td>
+                    <td>libvirt/KVM virtual network</td>
+                    <td><span class="badge avoid">❌ Avoid</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Loopback</strong></td>
+                    <td><code>127.0.0.1/8</code></td>
+                    <td>Local machine only</td>
+                    <td><span class="badge avoid">❌ Doesn't work remotely</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>2. Interface Selection Priority</h3>
+        <p>When choosing which interface to bind port-forward to, follow this priority:</p>
+
+        <h4><strong>Priority 1: Physical Network Interfaces (WiFi/Ethernet)</strong></h4>
+        <ul>
+            <li><strong>Why</strong>: Most reliable for external connectivity</li>
+            <li><strong>When</strong>: You need access from other devices on the same network or via VPN</li>
+            <li><strong>Example</strong>: <code>192.168.50.216</code>, <code>192.168.1.100</code>, <code>10.0.0.15</code></li>
+        </ul>
+
+        <pre><code>kubectl port-forward --address 192.168.50.216 svc/my-service 8080:8080 -n my-namespace</code></pre>
+
+        <h4><strong>Priority 2: VPN Interfaces (with caution)</strong></h4>
+        <ul>
+            <li><strong>Why</strong>: Can work but may have routing restrictions</li>
+            <li><strong>When</strong>: Only if physical interfaces aren't accessible from your client</li>
+            <li><strong>Limitations</strong>: Some VPN solutions (Tailscale, WireGuard) have security policies that block port forwarding</li>
+            <li><strong>Example</strong>: <code>100.65.114.2</code> (Tailscale), <code>10.8.0.1</code> (OpenVPN)</li>
+        </ul>
+
+        <pre><code># Test first - may not work due to VPN routing policies
+kubectl port-forward --address 100.65.114.2 svc/my-service 8080:8080 -n my-namespace</code></pre>
+
+        <h4><strong>Priority 3: All Interfaces (fallback)</strong></h4>
+        <ul>
+            <li><strong>Why</strong>: Binds to all available interfaces</li>
+            <li><strong>When</strong>: As a last resort when specific interface binding fails</li>
+            <li><strong>Security</strong>: Less secure as it exposes the service on all networks</li>
+        </ul>
+
+        <pre><code>kubectl port-forward --address 0.0.0.0 svc/my-service 8080:8080 -n my-namespace</code></pre>
+
+        <h2 id="practical-example">Practical Example: Wazuh Dashboard Access</h2>
+
+        <h3>Scenario</h3>
+        <ul>
+            <li>User connected via VPN at <code>192.168.1.16</code></li>
+            <li>Kubernetes cluster on local machine</li>
+            <li>Need to access Wazuh dashboard remotely</li>
+        </ul>
+
+        <h3>Interface Discovery</h3>
+        <pre><code>$ ip addr show | grep "inet " | grep -v "127.0.0.1"
+    inet 192.168.50.216/23 brd 192.168.51.255 scope global dynamic noprefixroute wlx4086cbe417c0
+    inet 192.168.122.1/24 brd 192.168.122.255 scope global virbr0  
+    inet 100.65.114.2/32 scope global tailscale0</code></pre>
+
+        <h3>Interface Analysis</h3>
+        <ol>
+            <li><strong><code>192.168.50.216</code> (WiFi)</strong>: ✅ Best choice - physical interface, reliable routing</li>
+            <li><strong><code>100.65.114.2</code> (Tailscale)</strong>: ⚠️ Secondary choice - VPN may have restrictions</li>
+            <li><strong><code>192.168.122.1</code> (virbr0)</strong>: ❌ Avoid - virtual bridge for VMs</li>
+        </ol>
+
+        <h3>Solution</h3>
+        <pre><code># Bind to WiFi interface for reliable remote access
+kubectl port-forward --address 192.168.50.216 svc/dashboard 5601:5601 -n wazuh
+
+# Access from VPN client
+curl http://192.168.50.216:5601</code></pre>
+
+        <h2 id="troubleshooting">Troubleshooting Port Forward Issues</h2>
+
+        <h3>Issue: "Connection Refused" from Remote Client</h3>
+
+        <div class="alert info">
+            <strong>Diagnosis Steps:</strong>
+        </div>
+
+        <h4>1. Verify port-forward is running:</h4>
+        <pre><code># Check if port-forward process is active
+ps aux | grep "kubectl port-forward"
+
+# Check if port is listening on the correct interface
+ss -tlnp | grep 5601</code></pre>
+
+        <h4>2. Test local connectivity:</h4>
+        <pre><code># Test from the Kubernetes host machine
+curl http://192.168.50.216:5601</code></pre>
+
+        <h4>3. Check firewall rules:</h4>
+        <pre><code># Ubuntu/Debian
+sudo ufw status
+
+# RHEL/CentOS
+sudo firewall-cmd --list-all
+
+# Check if port is blocked
+sudo ss -tlnp | grep :5601</code></pre>
+
+        <h4>4. Verify network routing:</h4>
+        <pre><code># From remote client, test network connectivity
+ping 192.168.50.216
+telnet 192.168.50.216 5601</code></pre>
+
+        <h3>Issue: Interface IP Address Changes</h3>
+
+        <div class="alert warning">
+            <strong>Problem</strong>: WiFi interfaces can get different IP addresses via DHCP.
+        </div>
+
+        <h4>Solutions:</h4>
+
+        <h4>1. Set static IP (recommended for development):</h4>
+        <pre><code># Ubuntu netplan example
+sudo nano /etc/netplan/01-wifi.yaml</code></pre>
+
+        <h4>2. Use interface name instead of IP:</h4>
+        <pre><code># Find interface name
+ip link show
+
+# Use interface name (if supported by your port-forward tool)
+kubectl port-forward --address $(ip -4 addr show wlx4086cbe417c0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}') svc/dashboard 5601:5601 -n wazuh</code></pre>
+
+        <h4>3. Dynamic script approach:</h4>
+        <pre><code>#!/bin/bash
+# get-wifi-ip.sh
+WIFI_IP=$(ip addr show | grep 'inet.*192\.168\.' | grep -v '192\.168\.122' | awk '{print $2}' | cut -d'/' -f1 | head -1)
+echo "Using WiFi IP: $WIFI_IP"
+kubectl port-forward --address $WIFI_IP svc/dashboard 5601:5601 -n wazuh</code></pre>
+
+        <h2 id="security">Security Considerations</h2>
+
+        <h3>Port Forward Security Best Practices</h3>
+
+        <ol>
+            <li><strong>Bind to Specific Interfaces</strong>: Avoid <code>0.0.0.0</code> unless necessary</li>
+            <li><strong>Use Least Privilege</strong>: Only expose ports you need</li>
+            <li><strong>Temporary Access</strong>: Stop port-forwards when not in use</li>
+            <li><strong>Authentication</strong>: Ensure services have proper authentication</li>
+            <li><strong>Network Segmentation</strong>: Consider firewall rules for sensitive services</li>
+        </ol>
+
+        <h3>Alternative Solutions for Production</h3>
+
+        <p>For production environments, consider these alternatives to port-forwarding:</p>
+
+        <ol>
+            <li><strong>Ingress Controllers</strong>: Nginx, Traefik, HAProxy</li>
+            <li><strong>Load Balancers</strong>: MetalLB, cloud provider load balancers</li>
+            <li><strong>Service Mesh</strong>: Istio, Linkerd with proper gateway configuration</li>
+            <li><strong>VPN Solutions</strong>: WireGuard, OpenVPN with proper routing</li>
+            <li><strong>SSH Tunnels</strong>: More secure for occasional access</li>
+        </ol>
+
+        <h2 id="commands">Common Port Forward Commands</h2>
+
+        <h3>Basic Port Forward (localhost only)</h3>
+        <pre><code>kubectl port-forward svc/my-service 8080:8080 -n my-namespace</code></pre>
+
+        <h3>Remote Access Port Forward</h3>
+        <pre><code># Bind to specific interface
+kubectl port-forward --address 192.168.1.100 svc/my-service 8080:8080 -n my-namespace
+
+# Bind to all interfaces (less secure)
+kubectl port-forward --address 0.0.0.0 svc/my-service 8080:8080 -n my-namespace
+
+# Background process
+kubectl port-forward --address 192.168.1.100 svc/my-service 8080:8080 -n my-namespace &</code></pre>
+
+        <h3>Port Forward to Pod</h3>
+        <pre><code># Forward to specific pod
+kubectl port-forward --address 192.168.1.100 pod/my-pod-12345 8080:8080 -n my-namespace
+
+# Forward to deployment
+kubectl port-forward --address 192.168.1.100 deployment/my-deployment 8080:8080 -n my-namespace</code></pre>
+
+        <h2 id="summary">Summary</h2>
+
+        <p>The key to successful remote port forwarding is:</p>
+
+        <ol>
+            <li><strong>Choose the right interface</strong>: Physical network interfaces (WiFi/Ethernet) are most reliable</li>
+            <li><strong>Avoid virtual interfaces</strong>: Docker bridges and virtual networks often don't route properly</li>
+            <li><strong>Test connectivity</strong>: Always verify both local and remote access</li>
+            <li><strong>Consider security</strong>: Use specific interfaces rather than binding to all (0.0.0.0)</li>
+            <li><strong>Plan for IP changes</strong>: Dynamic IPs require scripting or static configuration</li>
+        </ol>
+
+        <div class="alert info">
+            For the Wazuh deployment specifically, binding to your WiFi interface provides the most reliable access for VPN clients while maintaining reasonable security boundaries.
+        </div>
+
+        <div class="footer">
+            <p>Generated from markdown documentation for GitHub Pages hosting</p>
+        </div>
+    </div>
+</body>
+</html>
