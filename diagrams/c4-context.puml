@@ -1,0 +1,10 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+title System Context - Your Platform
+
+Person(user, "User", "Human using the platform")
+System_Boundary(sys, "Your Platform") {
+  System(system, "Kubernetes-based Data Platform", "Ingestion, Processing, Inference, Visualization")
+}
+Rel(user, system, "Uses", "HTTPS")
+@enduml

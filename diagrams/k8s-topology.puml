@@ -1,0 +1,162 @@
+@startuml
+title Kubernetes Topology - Services ↔ Workloads
+skinparam linetype ortho
+node "ai-agent/svc/ai-agent-kafka-kafka-bootstrap" as svc_ai-agent-kafka-kafka-bootstrap_ai-agent
+node "ai-agent/svc/ai-agent-kafka-kafka-brokers" as svc_ai-agent-kafka-kafka-brokers_ai-agent
+node "ai-agent/svc/anomaly-results-processor" as svc_anomaly-results-processor_ai-agent
+node "ai-agent/svc/data-processor" as svc_data-processor_ai-agent
+node "ai-agent/svc/delta-morpheus-connector" as svc_delta-morpheus-connector_ai-agent
+node "ai-agent/svc/enhanced-results-api" as svc_enhanced-results-api_ai-agent
+node "ai-agent/svc/enhanced-results-api-nodeport" as svc_enhanced-results-api-nodeport_ai-agent
+node "ai-agent/svc/kafka-agent-bridge" as svc_kafka-agent-bridge_ai-agent
+node "ai-agent/svc/morpheus-connector" as svc_morpheus-connector_ai-agent
+node "ai-agent/svc/morpheus-gpu-connector" as svc_morpheus-gpu-connector_ai-agent
+node "ai-agent/svc/morpheus-triton-connector" as svc_morpheus-triton-connector_ai-agent
+node "ai-agent/svc/netflow-generator" as svc_netflow-generator_ai-agent
+node "ai-agent/svc/splunk-hec-connector" as svc_splunk-hec-connector_ai-agent
+node "cert-manager/svc/cert-manager" as svc_cert-manager_cert-manager
+node "cert-manager/svc/cert-manager-cainjector" as svc_cert-manager-cainjector_cert-manager
+node "cert-manager/svc/cert-manager-webhook" as svc_cert-manager-webhook_cert-manager
+node "cert-manager/svc/namecheap-webhook-cert-manager-webhook-namecheap" as svc_namecheap-webhook-cert-manager-webhook-namecheap_cert-manager
+node "cilium-test-1/svc/echo-same-node" as svc_echo-same-node_cilium-test-1
+node "default/svc/kubernetes" as svc_kubernetes_default
+node "gpu-operator/svc/ai-engine" as svc_ai-engine_gpu-operator
+node "gpu-operator/svc/mlflow" as svc_mlflow_gpu-operator
+node "gpu-operator/svc/morpheus-connector-service" as svc_morpheus-connector-service_gpu-operator
+node "gpu-operator/svc/triton-external" as svc_triton-external_gpu-operator
+node "kube-system/svc/cilium-envoy" as svc_cilium-envoy_kube-system
+node "kube-system/svc/hubble-metrics" as svc_hubble-metrics_kube-system
+node "kube-system/svc/hubble-peer" as svc_hubble-peer_kube-system
+node "kube-system/svc/hubble-relay" as svc_hubble-relay_kube-system
+node "kube-system/svc/hubble-ui" as svc_hubble-ui_kube-system
+node "kube-system/svc/kube-dns" as svc_kube-dns_kube-system
+node "minio/svc/minio" as svc_minio_minio
+node "minio/svc/minio-console" as svc_minio-console_minio
+node "spark-operator/svc/spark-operator-webhook-svc" as svc_spark-operator-webhook-svc_spark-operator
+node "wazuh/svc/dashboard" as svc_dashboard_wazuh
+node "wazuh/svc/indexer" as svc_indexer_wazuh
+node "wazuh/svc/wazuh" as svc_wazuh_wazuh
+node "wazuh/svc/wazuh-siem-indexer-nodes" as svc_wazuh-siem-indexer-nodes_wazuh
+node "wazuh/svc/wazuh-siem-manager-cluster" as svc_wazuh-siem-manager-cluster_wazuh
+node "wazuh/svc/wazuh-siem-manager-worker" as svc_wazuh-siem-manager-worker_wazuh
+component "ai-agent/Deployment/ai-agent-kafka-entity-operator" as wl_ai-agent-kafka-entity-operator_ai-agent
+component "ai-agent/Deployment/anomaly-results-processor" as wl_anomaly-results-processor_ai-agent
+component "ai-agent/Deployment/data-processor" as wl_data-processor_ai-agent
+component "ai-agent/Deployment/delta-morpheus-connector" as wl_delta-morpheus-connector_ai-agent
+component "ai-agent/Deployment/enhanced-results-api" as wl_enhanced-results-api_ai-agent
+component "ai-agent/Deployment/kafka-agent-bridge" as wl_kafka-agent-bridge_ai-agent
+component "ai-agent/Deployment/morpheus-triton-connector" as wl_morpheus-triton-connector_ai-agent
+component "ai-agent/Deployment/netflow-generator" as wl_netflow-generator_ai-agent
+component "ai-agent/Deployment/splunk-hec-connector" as wl_splunk-hec-connector_ai-agent
+component "cert-manager/Deployment/cert-manager" as wl_cert-manager_cert-manager
+component "cert-manager/Deployment/cert-manager-cainjector" as wl_cert-manager-cainjector_cert-manager
+component "cert-manager/Deployment/cert-manager-webhook" as wl_cert-manager-webhook_cert-manager
+component "cert-manager/Deployment/namecheap-webhook-cert-manager-webhook-namecheap" as wl_namecheap-webhook-cert-manager-webhook-namecheap_cert-manager
+component "gpu-operator/Deployment/ai-engine" as wl_ai-engine_gpu-operator
+component "gpu-operator/Deployment/mlflow" as wl_mlflow_gpu-operator
+component "kube-system/Deployment/cilium-operator" as wl_cilium-operator_kube-system
+component "kube-system/Deployment/coredns" as wl_coredns_kube-system
+component "kube-system/Deployment/hubble-relay" as wl_hubble-relay_kube-system
+component "kube-system/Deployment/hubble-ui" as wl_hubble-ui_kube-system
+component "local-path-storage/Deployment/local-path-provisioner" as wl_local-path-provisioner_local-path-storage
+component "minio/Deployment/minio" as wl_minio_minio
+component "spark-operator/Deployment/spark-operator-controller" as wl_spark-operator-controller_spark-operator
+component "spark-operator/Deployment/spark-operator-webhook" as wl_spark-operator-webhook_spark-operator
+component "strimzi-system/Deployment/strimzi-cluster-operator" as wl_strimzi-cluster-operator_strimzi-system
+component "wazuh/Deployment/wazuh-siem-dashboard" as wl_wazuh-siem-dashboard_wazuh
+component "wazuh/StatefulSet/wazuh-siem-indexer" as wl_wazuh-siem-indexer_wazuh
+component "wazuh/StatefulSet/wazuh-siem-manager-master" as wl_wazuh-siem-manager-master_wazuh
+component "wazuh/StatefulSet/wazuh-siem-manager-worker" as wl_wazuh-siem-manager-worker_wazuh
+component "kube-system/DaemonSet/cilium" as wl_cilium_kube-system
+component "kube-system/DaemonSet/cilium-envoy" as wl_cilium-envoy_kube-system
+component "kube-system/DaemonSet/kube-proxy" as wl_kube-proxy_kube-system
+component "kube-system/DaemonSet/nvidia-device-plugin" as wl_nvidia-device-plugin_kube-system
+component "kube-system/DaemonSet/nvidia-device-plugin-mps-control-daemon" as wl_nvidia-device-plugin-mps-control-daemon_kube-system
+() "ai-agent/pod/ai-agent-kafka-connect-connect-build" as pod_ai-agent-kafka-connect-connect-build_ai-agent
+() "ai-agent/pod/ai-agent-kafka-entity-operator-59c6468945-g6z9c" as pod_ai-agent-kafka-entity-operator-59c6468945-g6z9c_ai-agent
+() "ai-agent/pod/ai-agent-kafka-single-role-0" as pod_ai-agent-kafka-single-role-0_ai-agent
+() "ai-agent/pod/anomaly-results-processor-584b847c98-flg68" as pod_anomaly-results-processor-584b847c98-flg68_ai-agent
+() "ai-agent/pod/data-processor-5dcc6f8f86-4zdfr" as pod_data-processor-5dcc6f8f86-4zdfr_ai-agent
+() "ai-agent/pod/delta-morpheus-connector-5f67b4d569-mxffd" as pod_delta-morpheus-connector-5f67b4d569-mxffd_ai-agent
+() "ai-agent/pod/enhanced-results-api-fb475cb7b-x844k" as pod_enhanced-results-api-fb475cb7b-x844k_ai-agent
+() "ai-agent/pod/kafka-agent-bridge-696499bdd5-m2thk" as pod_kafka-agent-bridge-696499bdd5-m2thk_ai-agent
+() "ai-agent/pod/kafka-agent-bridge-696499bdd5-sz7wx" as pod_kafka-agent-bridge-696499bdd5-sz7wx_ai-agent
+() "ai-agent/pod/morpheus-triton-connector-6c7dc945db-vr5dd" as pod_morpheus-triton-connector-6c7dc945db-vr5dd_ai-agent
+() "ai-agent/pod/netflow-generator-7c5ddd78bd-wzxdz" as pod_netflow-generator-7c5ddd78bd-wzxdz_ai-agent
+() "ai-agent/pod/netshoot" as pod_netshoot_ai-agent
+() "cert-manager/pod/cert-manager-58dd99f969-zlggs" as pod_cert-manager-58dd99f969-zlggs_cert-manager
+() "cert-manager/pod/cert-manager-cainjector-55cd9f77b5-r94rf" as pod_cert-manager-cainjector-55cd9f77b5-r94rf_cert-manager
+() "cert-manager/pod/cert-manager-webhook-7987476d56-75d4w" as pod_cert-manager-webhook-7987476d56-75d4w_cert-manager
+() "cert-manager/pod/namecheap-webhook-cert-manager-webhook-namecheap-65ff5fc9crktlr" as pod_namecheap-webhook-cert-manager-webhook-namecheap-65ff5fc9crktlr_cert-manager
+() "gpu-operator/pod/ai-engine-c974b49c4-8k7mb" as pod_ai-engine-c974b49c4-8k7mb_gpu-operator
+() "gpu-operator/pod/mlflow-c95b7bb4c-pgdt2" as pod_mlflow-c95b7bb4c-pgdt2_gpu-operator
+() "gpu-operator/pod/sdk-cli-morpheus-sdk-client" as pod_sdk-cli-morpheus-sdk-client_gpu-operator
+() "kube-system/pod/cilium-2zfdk" as pod_cilium-2zfdk_kube-system
+() "kube-system/pod/cilium-envoy-cfpmg" as pod_cilium-envoy-cfpmg_kube-system
+() "kube-system/pod/cilium-operator-665557897b-srm7g" as pod_cilium-operator-665557897b-srm7g_kube-system
+() "kube-system/pod/coredns-578d4f8ffc-nw4nk" as pod_coredns-578d4f8ffc-nw4nk_kube-system
+() "kube-system/pod/coredns-578d4f8ffc-sgk8h" as pod_coredns-578d4f8ffc-sgk8h_kube-system
+() "kube-system/pod/hubble-relay-697879c474-47dwg" as pod_hubble-relay-697879c474-47dwg_kube-system
+() "kube-system/pod/hubble-ui-76d4965bb6-bqdhk" as pod_hubble-ui-76d4965bb6-bqdhk_kube-system
+() "kube-system/pod/hubble-ui-76d4965bb6-fmsg8" as pod_hubble-ui-76d4965bb6-fmsg8_kube-system
+() "kube-system/pod/kube-apiserver-talos-13b-zf7" as pod_kube-apiserver-talos-13b-zf7_kube-system
+() "kube-system/pod/kube-controller-manager-talos-13b-zf7" as pod_kube-controller-manager-talos-13b-zf7_kube-system
+() "kube-system/pod/kube-proxy-mtqqx" as pod_kube-proxy-mtqqx_kube-system
+() "kube-system/pod/kube-scheduler-talos-13b-zf7" as pod_kube-scheduler-talos-13b-zf7_kube-system
+() "kube-system/pod/nvidia-device-plugin-pmshr" as pod_nvidia-device-plugin-pmshr_kube-system
+() "local-path-storage/pod/local-path-provisioner-7ccbc84d94-2zxj9" as pod_local-path-provisioner-7ccbc84d94-2zxj9_local-path-storage
+() "minio/pod/minio-68f476c967-wd2qb" as pod_minio-68f476c967-wd2qb_minio
+() "spark-operator/pod/spark-operator-controller-6b86fc5457-kd29h" as pod_spark-operator-controller-6b86fc5457-kd29h_spark-operator
+() "spark-operator/pod/spark-operator-webhook-7d76df45bf-z7db7" as pod_spark-operator-webhook-7d76df45bf-z7db7_spark-operator
+() "strimzi-system/pod/strimzi-cluster-operator-57d8ff798f-8t29f" as pod_strimzi-cluster-operator-57d8ff798f-8t29f_strimzi-system
+() "wazuh/pod/netshoot-debug" as pod_netshoot-debug_wazuh
+() "wazuh/pod/wazuh-admin-tools" as pod_wazuh-admin-tools_wazuh
+() "wazuh/pod/wazuh-diagnostic" as pod_wazuh-diagnostic_wazuh
+() "wazuh/pod/wazuh-siem-dashboard-7744b94f58-wmlft" as pod_wazuh-siem-dashboard-7744b94f58-wmlft_wazuh
+() "wazuh/pod/wazuh-siem-indexer-0" as pod_wazuh-siem-indexer-0_wazuh
+() "wazuh/pod/wazuh-siem-manager-master-0" as pod_wazuh-siem-manager-master-0_wazuh
+() "wazuh/pod/wazuh-siem-manager-worker-0" as pod_wazuh-siem-manager-worker-0_wazuh
+() "wazuh/pod/wazuh-siem-manager-worker-1" as pod_wazuh-siem-manager-worker-1_wazuh
+svc_anomaly-results-processor_ai-agent --> wl_anomaly-results-processor_ai-agent : routes
+svc_data-processor_ai-agent --> wl_data-processor_ai-agent : routes
+svc_delta-morpheus-connector_ai-agent --> wl_delta-morpheus-connector_ai-agent : routes
+svc_enhanced-results-api_ai-agent --> wl_enhanced-results-api_ai-agent : routes
+svc_enhanced-results-api-nodeport_ai-agent --> wl_enhanced-results-api_ai-agent : routes
+svc_kafka-agent-bridge_ai-agent --> wl_kafka-agent-bridge_ai-agent : routes
+svc_morpheus-triton-connector_ai-agent --> wl_morpheus-triton-connector_ai-agent : routes
+svc_netflow-generator_ai-agent --> wl_netflow-generator_ai-agent : routes
+svc_splunk-hec-connector_ai-agent --> wl_splunk-hec-connector_ai-agent : routes
+svc_cert-manager_cert-manager --> wl_cert-manager_cert-manager : routes
+svc_cert-manager-cainjector_cert-manager --> wl_cert-manager-cainjector_cert-manager : routes
+svc_cert-manager-webhook_cert-manager --> wl_cert-manager-webhook_cert-manager : routes
+svc_namecheap-webhook-cert-manager-webhook-namecheap_cert-manager --> wl_namecheap-webhook-cert-manager-webhook-namecheap_cert-manager : routes
+svc_ai-engine_gpu-operator --> wl_ai-engine_gpu-operator : routes
+svc_mlflow_gpu-operator --> wl_mlflow_gpu-operator : routes
+svc_triton-external_gpu-operator --> wl_ai-engine_gpu-operator : routes
+svc_cilium-envoy_kube-system --> wl_cilium-envoy_kube-system : routes
+svc_hubble-metrics_kube-system --> wl_cilium_kube-system : routes
+svc_hubble-peer_kube-system --> wl_cilium_kube-system : routes
+svc_hubble-relay_kube-system --> wl_hubble-relay_kube-system : routes
+svc_hubble-ui_kube-system --> wl_hubble-ui_kube-system : routes
+svc_kube-dns_kube-system --> wl_coredns_kube-system : routes
+svc_minio_minio --> wl_minio_minio : routes
+svc_minio-console_minio --> wl_minio_minio : routes
+svc_spark-operator-webhook-svc_spark-operator --> wl_spark-operator-webhook_spark-operator : routes
+svc_dashboard_wazuh --> wl_wazuh-siem-dashboard_wazuh : routes
+svc_indexer_wazuh --> wl_wazuh-siem-indexer_wazuh : routes
+svc_wazuh_wazuh --> wl_wazuh-siem-manager-master_wazuh : routes
+svc_wazuh-siem-indexer-nodes_wazuh --> wl_wazuh-siem-indexer_wazuh : routes
+svc_wazuh-siem-manager-cluster_wazuh --> wl_wazuh-siem-manager-master_wazuh : routes
+svc_wazuh-siem-manager-cluster_wazuh --> wl_wazuh-siem-manager-worker_wazuh : routes
+svc_wazuh-siem-manager-worker_wazuh --> wl_wazuh-siem-manager-worker_wazuh : routes
+wl_cilium_kube-system --> pod_cilium-2zfdk_kube-system : controls
+wl_cilium-envoy_kube-system --> pod_cilium-envoy-cfpmg_kube-system : controls
+wl_kube-proxy_kube-system --> pod_kube-proxy-mtqqx_kube-system : controls
+wl_nvidia-device-plugin_kube-system --> pod_nvidia-device-plugin-pmshr_kube-system : controls
+wl_wazuh-siem-indexer_wazuh --> pod_wazuh-siem-indexer-0_wazuh : controls
+wl_wazuh-siem-manager-master_wazuh --> pod_wazuh-siem-manager-master-0_wazuh : controls
+wl_wazuh-siem-manager-worker_wazuh --> pod_wazuh-siem-manager-worker-0_wazuh : controls
+wl_wazuh-siem-manager-worker_wazuh --> pod_wazuh-siem-manager-worker-1_wazuh : controls
+cloud "ai-agent/ing/anomaly-results-viewer" as ing_anomaly-results-viewer_ai-agent
+ing_anomaly-results-viewer_ai-agent --> svc_anomaly-results-processor_ai-agent : forwards
+@enduml

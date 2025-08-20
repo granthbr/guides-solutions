@@ -1,0 +1,133 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+title Container View - Namespaces, Services, Workloads
+System_Boundary(k8s, "Kubernetes Cluster") {
+  Container_Boundary(ns_ai-agent, "Namespace: ai-agent") {
+    Container(svc_ai-agent-kafka-kafka-bootstrap_ai-agent, "Service: ai-agent-kafka-kafka-bootstrap", "K8s Service")
+    Container(svc_ai-agent-kafka-kafka-brokers_ai-agent, "Service: ai-agent-kafka-kafka-brokers", "K8s Service")
+    Container(svc_anomaly-results-processor_ai-agent, "Service: anomaly-results-processor", "K8s Service")
+    Container(svc_data-processor_ai-agent, "Service: data-processor", "K8s Service")
+    Container(svc_delta-morpheus-connector_ai-agent, "Service: delta-morpheus-connector", "K8s Service")
+    Container(svc_enhanced-results-api_ai-agent, "Service: enhanced-results-api", "K8s Service")
+    Container(svc_enhanced-results-api-nodeport_ai-agent, "Service: enhanced-results-api-nodeport", "K8s Service")
+    Container(svc_kafka-agent-bridge_ai-agent, "Service: kafka-agent-bridge", "K8s Service")
+    Container(svc_morpheus-connector_ai-agent, "Service: morpheus-connector", "K8s Service")
+    Container(svc_morpheus-gpu-connector_ai-agent, "Service: morpheus-gpu-connector", "K8s Service")
+    Container(svc_morpheus-triton-connector_ai-agent, "Service: morpheus-triton-connector", "K8s Service")
+    Container(svc_netflow-generator_ai-agent, "Service: netflow-generator", "K8s Service")
+    Container(svc_splunk-hec-connector_ai-agent, "Service: splunk-hec-connector", "K8s Service")
+    Container(wl_ai-agent-kafka-entity-operator_ai-agent, "Deployment: ai-agent-kafka-entity-operator", "K8s Workload")
+    Container(wl_anomaly-results-processor_ai-agent, "Deployment: anomaly-results-processor", "K8s Workload")
+    Container(wl_data-processor_ai-agent, "Deployment: data-processor", "K8s Workload")
+    Container(wl_delta-morpheus-connector_ai-agent, "Deployment: delta-morpheus-connector", "K8s Workload")
+    Container(wl_enhanced-results-api_ai-agent, "Deployment: enhanced-results-api", "K8s Workload")
+    Container(wl_kafka-agent-bridge_ai-agent, "Deployment: kafka-agent-bridge", "K8s Workload")
+    Container(wl_morpheus-triton-connector_ai-agent, "Deployment: morpheus-triton-connector", "K8s Workload")
+    Container(wl_netflow-generator_ai-agent, "Deployment: netflow-generator", "K8s Workload")
+    Container(wl_splunk-hec-connector_ai-agent, "Deployment: splunk-hec-connector", "K8s Workload")
+  }
+  Container_Boundary(ns_cert-manager, "Namespace: cert-manager") {
+    Container(svc_cert-manager_cert-manager, "Service: cert-manager", "K8s Service")
+    Container(svc_cert-manager-cainjector_cert-manager, "Service: cert-manager-cainjector", "K8s Service")
+    Container(svc_cert-manager-webhook_cert-manager, "Service: cert-manager-webhook", "K8s Service")
+    Container(svc_namecheap-webhook-cert-manager-webhook-namecheap_cert-manager, "Service: namecheap-webhook-cert-manager-webhook-namecheap", "K8s Service")
+    Container(wl_cert-manager_cert-manager, "Deployment: cert-manager", "K8s Workload")
+    Container(wl_cert-manager-cainjector_cert-manager, "Deployment: cert-manager-cainjector", "K8s Workload")
+    Container(wl_cert-manager-webhook_cert-manager, "Deployment: cert-manager-webhook", "K8s Workload")
+    Container(wl_namecheap-webhook-cert-manager-webhook-namecheap_cert-manager, "Deployment: namecheap-webhook-cert-manager-webhook-namecheap", "K8s Workload")
+  }
+  Container_Boundary(ns_cilium-test-1, "Namespace: cilium-test-1") {
+    Container(svc_echo-same-node_cilium-test-1, "Service: echo-same-node", "K8s Service")
+  }
+  Container_Boundary(ns_default, "Namespace: default") {
+    Container(svc_kubernetes_default, "Service: kubernetes", "K8s Service")
+  }
+  Container_Boundary(ns_gpu-operator, "Namespace: gpu-operator") {
+    Container(svc_ai-engine_gpu-operator, "Service: ai-engine", "K8s Service")
+    Container(svc_mlflow_gpu-operator, "Service: mlflow", "K8s Service")
+    Container(svc_morpheus-connector-service_gpu-operator, "Service: morpheus-connector-service", "K8s Service")
+    Container(svc_triton-external_gpu-operator, "Service: triton-external", "K8s Service")
+    Container(wl_ai-engine_gpu-operator, "Deployment: ai-engine", "K8s Workload")
+    Container(wl_mlflow_gpu-operator, "Deployment: mlflow", "K8s Workload")
+  }
+  Container_Boundary(ns_kube-system, "Namespace: kube-system") {
+    Container(svc_cilium-envoy_kube-system, "Service: cilium-envoy", "K8s Service")
+    Container(svc_hubble-metrics_kube-system, "Service: hubble-metrics", "K8s Service")
+    Container(svc_hubble-peer_kube-system, "Service: hubble-peer", "K8s Service")
+    Container(svc_hubble-relay_kube-system, "Service: hubble-relay", "K8s Service")
+    Container(svc_hubble-ui_kube-system, "Service: hubble-ui", "K8s Service")
+    Container(svc_kube-dns_kube-system, "Service: kube-dns", "K8s Service")
+    Container(wl_cilium-operator_kube-system, "Deployment: cilium-operator", "K8s Workload")
+    Container(wl_coredns_kube-system, "Deployment: coredns", "K8s Workload")
+    Container(wl_hubble-relay_kube-system, "Deployment: hubble-relay", "K8s Workload")
+    Container(wl_hubble-ui_kube-system, "Deployment: hubble-ui", "K8s Workload")
+    Container(wl_cilium_kube-system, "DaemonSet: cilium", "K8s Workload")
+    Container(wl_cilium-envoy_kube-system, "DaemonSet: cilium-envoy", "K8s Workload")
+    Container(wl_kube-proxy_kube-system, "DaemonSet: kube-proxy", "K8s Workload")
+    Container(wl_nvidia-device-plugin_kube-system, "DaemonSet: nvidia-device-plugin", "K8s Workload")
+    Container(wl_nvidia-device-plugin-mps-control-daemon_kube-system, "DaemonSet: nvidia-device-plugin-mps-control-daemon", "K8s Workload")
+  }
+  Container_Boundary(ns_local-path-storage, "Namespace: local-path-storage") {
+    Container(wl_local-path-provisioner_local-path-storage, "Deployment: local-path-provisioner", "K8s Workload")
+  }
+  Container_Boundary(ns_minio, "Namespace: minio") {
+    Container(svc_minio_minio, "Service: minio", "K8s Service")
+    Container(svc_minio-console_minio, "Service: minio-console", "K8s Service")
+    Container(wl_minio_minio, "Deployment: minio", "K8s Workload")
+  }
+  Container_Boundary(ns_spark-operator, "Namespace: spark-operator") {
+    Container(svc_spark-operator-webhook-svc_spark-operator, "Service: spark-operator-webhook-svc", "K8s Service")
+    Container(wl_spark-operator-controller_spark-operator, "Deployment: spark-operator-controller", "K8s Workload")
+    Container(wl_spark-operator-webhook_spark-operator, "Deployment: spark-operator-webhook", "K8s Workload")
+  }
+  Container_Boundary(ns_strimzi-system, "Namespace: strimzi-system") {
+    Container(wl_strimzi-cluster-operator_strimzi-system, "Deployment: strimzi-cluster-operator", "K8s Workload")
+  }
+  Container_Boundary(ns_wazuh, "Namespace: wazuh") {
+    Container(svc_dashboard_wazuh, "Service: dashboard", "K8s Service")
+    Container(svc_indexer_wazuh, "Service: indexer", "K8s Service")
+    Container(svc_wazuh_wazuh, "Service: wazuh", "K8s Service")
+    Container(svc_wazuh-siem-indexer-nodes_wazuh, "Service: wazuh-siem-indexer-nodes", "K8s Service")
+    Container(svc_wazuh-siem-manager-cluster_wazuh, "Service: wazuh-siem-manager-cluster", "K8s Service")
+    Container(svc_wazuh-siem-manager-worker_wazuh, "Service: wazuh-siem-manager-worker", "K8s Service")
+    Container(wl_wazuh-siem-dashboard_wazuh, "Deployment: wazuh-siem-dashboard", "K8s Workload")
+    Container(wl_wazuh-siem-indexer_wazuh, "StatefulSet: wazuh-siem-indexer", "K8s Workload")
+    Container(wl_wazuh-siem-manager-master_wazuh, "StatefulSet: wazuh-siem-manager-master", "K8s Workload")
+    Container(wl_wazuh-siem-manager-worker_wazuh, "StatefulSet: wazuh-siem-manager-worker", "K8s Workload")
+  }
+Rel(svc_anomaly-results-processor_ai-agent, wl_anomaly-results-processor_ai-agent, "routes to")
+Rel(svc_data-processor_ai-agent, wl_data-processor_ai-agent, "routes to")
+Rel(svc_delta-morpheus-connector_ai-agent, wl_delta-morpheus-connector_ai-agent, "routes to")
+Rel(svc_enhanced-results-api_ai-agent, wl_enhanced-results-api_ai-agent, "routes to")
+Rel(svc_enhanced-results-api-nodeport_ai-agent, wl_enhanced-results-api_ai-agent, "routes to")
+Rel(svc_kafka-agent-bridge_ai-agent, wl_kafka-agent-bridge_ai-agent, "routes to")
+Rel(svc_morpheus-triton-connector_ai-agent, wl_morpheus-triton-connector_ai-agent, "routes to")
+Rel(svc_netflow-generator_ai-agent, wl_netflow-generator_ai-agent, "routes to")
+Rel(svc_splunk-hec-connector_ai-agent, wl_splunk-hec-connector_ai-agent, "routes to")
+Rel(svc_cert-manager_cert-manager, wl_cert-manager_cert-manager, "routes to")
+Rel(svc_cert-manager-cainjector_cert-manager, wl_cert-manager-cainjector_cert-manager, "routes to")
+Rel(svc_cert-manager-webhook_cert-manager, wl_cert-manager-webhook_cert-manager, "routes to")
+Rel(svc_namecheap-webhook-cert-manager-webhook-namecheap_cert-manager, wl_namecheap-webhook-cert-manager-webhook-namecheap_cert-manager, "routes to")
+Rel(svc_ai-engine_gpu-operator, wl_ai-engine_gpu-operator, "routes to")
+Rel(svc_mlflow_gpu-operator, wl_mlflow_gpu-operator, "routes to")
+Rel(svc_triton-external_gpu-operator, wl_ai-engine_gpu-operator, "routes to")
+Rel(svc_cilium-envoy_kube-system, wl_cilium-envoy_kube-system, "routes to")
+Rel(svc_hubble-metrics_kube-system, wl_cilium_kube-system, "routes to")
+Rel(svc_hubble-peer_kube-system, wl_cilium_kube-system, "routes to")
+Rel(svc_hubble-relay_kube-system, wl_hubble-relay_kube-system, "routes to")
+Rel(svc_hubble-ui_kube-system, wl_hubble-ui_kube-system, "routes to")
+Rel(svc_kube-dns_kube-system, wl_coredns_kube-system, "routes to")
+Rel(svc_minio_minio, wl_minio_minio, "routes to")
+Rel(svc_minio-console_minio, wl_minio_minio, "routes to")
+Rel(svc_spark-operator-webhook-svc_spark-operator, wl_spark-operator-webhook_spark-operator, "routes to")
+Rel(svc_dashboard_wazuh, wl_wazuh-siem-dashboard_wazuh, "routes to")
+Rel(svc_indexer_wazuh, wl_wazuh-siem-indexer_wazuh, "routes to")
+Rel(svc_wazuh_wazuh, wl_wazuh-siem-manager-master_wazuh, "routes to")
+Rel(svc_wazuh-siem-indexer-nodes_wazuh, wl_wazuh-siem-indexer_wazuh, "routes to")
+Rel(svc_wazuh-siem-manager-cluster_wazuh, wl_wazuh-siem-manager-master_wazuh, "routes to")
+Rel(svc_wazuh-siem-manager-cluster_wazuh, wl_wazuh-siem-manager-worker_wazuh, "routes to")
+Rel(svc_wazuh-siem-manager-worker_wazuh, wl_wazuh-siem-manager-worker_wazuh, "routes to")
+Boundary(ing_anomaly-results-viewer_ai-agent, "Ingress: anomaly-results-viewer")
+Rel(ing_anomaly-results-viewer_ai-agent, svc_anomaly-results-processor_ai-agent, "forwards")
+}
+@enduml
