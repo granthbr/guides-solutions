@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git Large File Troubleshooting Guide</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #e74c3c;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #27ae60;
+            margin-top: 25px;
+        }
+        h4 {
+            color: #8e44ad;
+        }
+        .error-box {
+            background-color: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+        }
+        .warning-box {
+            background-color: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .tip-box {
+            background-color: #e8f5e8;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        pre {
+            background-color: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            overflow-x: auto;
+            font-family: 'Courier New', Monaco, monospace;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', Monaco, monospace;
+        }
+        .step {
+            background-color: #f0f8ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+        }
+        .emoji {
+            font-size: 1.2em;
+        }
+        ul, ol {
+            padding-left: 20px;
+        }
+        li {
+            margin: 8px 0;
+        }
+        .resources {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .nav {
+            background-color: #34495e;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .nav a {
+            color: #ecf0f1;
+            text-decoration: none;
+            margin-right: 20px;
+        }
+        .nav a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <strong>Quick Navigation:</strong>
+            <a href="#problem">Problem</a>
+            <a href="#solution">Solution</a>
+            <a href="#verification">Verification</a>
+            <a href="#prevention">Prevention</a>
+            <a href="#resources">Resources</a>
+        </div>
+
+        <h1><span class="emoji">🚨</span> Git Large File Troubleshooting Guide</h1>
+
+        <h2 id="problem"><span class="emoji">🚨</span> Problem: GitHub Push Rejected Due to Large Files</h2>
+
+        <h3>Error Message</h3>
+        <div class="error-box">remote: error: File &lt;filename&gt; is XXX.XX MB; this exceeds GitHub's file size limit of 100.00 MB
+remote: error: GH001: Large files detected. You may want to try Git Large File Storage - https://git-lfs.github.com.
+! [remote rejected] main -> main (pre-receive hook declined)
+error: failed to push some refs to 'https://github.com/username/repository.git'</div>
+
+        <h3>Root Cause</h3>
+        <p>GitHub has a strict 100MB file size limit per file. When large files (like compiled binaries, archives, datasets, or Docker images) are committed to Git history, they prevent pushing to GitHub.</p>
+
+        <h2 id="solution"><span class="emoji">🛠️</span> Solution Process</h2>
+
+        <div class="step">
+            <h3>Step 1: Identify the Problem</h3>
+            <pre><code># Check current Git status
+git status
+
+# Check recent commits
+git log --oneline -5
+
+# Find large files in repository
+find . -type f -size +50M -exec ls -lh {} \;</code></pre>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Remove File from Git Cache (if not yet committed)</h3>
+            <pre><code># Remove file from staging area
+git rm --cached &lt;large-filename&gt;
+
+# Add to .gitignore to prevent future commits
+echo "&lt;large-filename&gt;" &gt;&gt; .gitignore
+echo "*.tar" &gt;&gt; .gitignore  # For file types
+echo "*.zip" &gt;&gt; .gitignore
+echo "*.bin" &gt;&gt; .gitignore
+
+# Commit the removal
+git commit -m "Remove large file from repository and update .gitignore"</code></pre>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Remove File from Git History (if already committed)</h3>
+            <p>If the file is already in Git history, you need to rewrite history:</p>
+            <pre><code># Method 1: Using git filter-branch (built-in but slower)
+git filter-branch --force --index-filter \
+  'git rm --cached --ignore-unmatch &lt;large-filename&gt;' \
+  --prune-empty --tag-name-filter cat -- --all
+
+# Method 2: Using git filter-repo (faster, requires installation)
+# pip install git-filter-repo
+git filter-repo --strip-blobs-bigger-than 100M
+# OR
+git filter-repo --path &lt;large-filename&gt; --invert-paths</code></pre>
+        </div>
+
+        <div class="step">
+            <h3>Step 4: Clean Up Git References</h3>
+            <pre><code># Remove backup references created by filter-branch
+rm -rf .git/refs/original/
+
+# Expire reflog entries
+git reflog expire --expire=now --all
+
+# Garbage collect and compress
+git gc --prune=now --aggressive</code></pre>
+        </div>
+
+        <div class="step">
+            <h3>Step 5: Force Push Cleaned History</h3>
+            <pre><code># Use force-with-lease for safety (recommended)
+git push --force-with-lease origin main
+
+# Or regular force push (use with caution)
+git push --force origin main</code></pre>
+        </div>
+
+        <h2 id="verification"><span class="emoji">🔍</span> Verification Steps</h2>
+
+        <h3>Verify File Removal</h3>
+        <pre><code># Check that large file is gone from history
+git log --stat --follow &lt;large-filename&gt;
+
+# Verify repository size
+du -sh .git/
+
+# Check what files are tracked
+git ls-files | grep -E "\.(tar|zip|bin|exe)$"</code></pre>
+
+        <h3>Test Push</h3>
+        <pre><code># Verify push works
+git push origin main</code></pre>
+
+        <h2 id="prevention"><span class="emoji">🛡️</span> Prevention Strategies</h2>
+
+        <h3>1. Update .gitignore Proactively</h3>
+        <pre><code># Build artifacts
+*.tar
+*.tar.gz
+*.zip
+*.rar
+*.7z
+*.bin
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Large data files
+*.csv
+*.json
+*.xml
+*.sql
+*.db
+*.sqlite
+
+# Docker and container files
+*.tar
+docker-compose.override.yml
+
+# IDE and OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Compiled binaries
+dist/
+build/
+target/
+*.class
+*.jar
+*.war</code></pre>
+
+        <h3>2. Use Git Hooks</h3>
+        <p>Create <code>.git/hooks/pre-commit</code> to check file sizes:</p>
+        <pre><code>#!/bin/bash
+# Check for large files before commit
+large_files=$(find . -type f -size +50M | grep -v ".git")
+if [ -n "$large_files" ]; then
+    echo "❌ Large files detected (>50MB):"
+    echo "$large_files"
+    echo "Add them to .gitignore or use Git LFS"
+    exit 1
+fi</code></pre>
+
+        <h3>3. Use Git LFS for Legitimate Large Files</h3>
+        <pre><code># Install Git LFS
+git lfs install
+
+# Track large file types
+git lfs track "*.tar"
+git lfs track "*.zip"
+git lfs track "*.bin"
+
+# Add .gitattributes
+git add .gitattributes
+git commit -m "Configure Git LFS for large files"</code></pre>
+
+        <h2><span class="emoji">🚀</span> Alternative Solutions</h2>
+
+        <h3>Option 1: Git LFS (Git Large File Storage)</h3>
+        <p>For legitimate large files that need version control:</p>
+        <pre><code>git lfs install
+git lfs track "*.large-extension"
+git add .gitattributes
+git add large-file.ext
+git commit -m "Add large file via Git LFS"</code></pre>
+
+        <h3>Option 2: External Storage</h3>
+        <p>Store large files externally and reference them:</p>
+        <ul>
+            <li>Cloud storage (AWS S3, Google Cloud Storage)</li>
+            <li>Artifact repositories (Nexus, Artifactory)</li>
+            <li>Container registries (Docker Hub, GHCR)</li>
+        </ul>
+
+        <h3>Option 3: Split Repository</h3>
+        <p>Separate large assets into dedicated repositories:</p>
+        <ul>
+            <li>Main code repository (small, fast)</li>
+            <li>Assets repository (large files)</li>
+            <li>CI/CD pipelines to combine when needed</li>
+        </ul>
+
+        <div class="warning-box">
+            <h2><span class="emoji">⚠️</span> Important Warnings</h2>
+            <ol>
+                <li><strong>Force pushing rewrites history</strong> - coordinate with team members</li>
+                <li><strong>Test the process</strong> on a backup/clone first</li>
+                <li><strong>Backup your repository</strong> before running history-rewriting commands</li>
+                <li><strong>Communicate with team</strong> when rewriting shared history</li>
+                <li><strong>Check CI/CD pipelines</strong> after force pushing</li>
+            </ol>
+        </div>
+
+        <div class="tip-box">
+            <h2><span class="emoji">💡</span> Pro Tips</h2>
+            <ul>
+                <li>Run <code>git log --oneline --graph</code> to visualize history changes</li>
+                <li>Use <code>git filter-repo</code> instead of <code>git filter-branch</code> for better performance</li>
+                <li>Consider repository size limits: GitHub recommends &lt;1GB total</li>
+                <li>Automate prevention with pre-commit hooks and CI checks</li>
+                <li>Document large file policies for your team</li>
+            </ul>
+        </div>
+
+        <div class="resources" id="resources">
+            <h2><span class="emoji">📚</span> Additional Resources</h2>
+            <ul>
+                <li><a href="https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github" target="_blank">GitHub File Size Limits</a></li>
+                <li><a href="https://git-lfs.github.com/" target="_blank">Git LFS Documentation</a></li>
+                <li><a href="https://github.com/newren/git-filter-repo" target="_blank">Git Filter-Repo</a></li>
+                <li><a href="https://rtyley.github.io/bfg-repo-cleaner/" target="_blank">BFG Repo-Cleaner</a></li>
+            </ul>
+        </div>
+
+        <hr>
+        <p><em>This guide helps resolve Git push failures due to GitHub's 100MB file size limit through safe history rewriting and prevention strategies.</em></p>
+    </div>
+</body>
+</html>
